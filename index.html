@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7fc;
+      color: #333;
+    }
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    h2 {
+      color: #007bff;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .table-container {
+      margin-top: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f4f7fc;
+      font-weight: bold;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-buttons button {
+      background-color: #dc3545;
+      padding: 8px 12px;
+    }
+
+    .action-buttons button:hover {
+      background-color: #c82333;
+    }
+
+    .info-card {
+      background-color: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    .info-card p {
+      margin: 8px 0;
+    }
+
+    .form-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .form-group input {
+      width: calc(33.33% - 10px);
+    }
+
+    .form-group button {
+      width: 100%;
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Student Management System</h1>
+  </header>
+
+  <div class="container">
+    <!-- Get All Students -->
+    <div>
+      <h2>View All Students</h2>
+      <button onclick="getAllStudents()">Fetch All Students</button>
+    </div>
+
+    <div class="table-container">
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Course</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Add New Student -->
+    <div>
+      <h2>Add New Student</h2>
+      <form id="addStudentForm" onsubmit="addStudent(event)">
+        <div class="form-group">
+          <input type="text" id="name" placeholder="Enter Name" required>
+          <input type="number" id="age" placeholder="Enter Age" required>
+          <input type="text" id="course" placeholder="Enter Course" required>
+        </div>
+        <button type="submit">Add Student</button>
+      </form>
+    </div>
+
+    <!-- Get Specific Student -->
+    <div>
+      <h2>Search Specific Student</h2>
+      <input type="number" id="studentId" placeholder="Enter Student ID">
+      <button onclick="getSpecificStudent()">Get Student</button>
+      <div id="specificStudent" class="info-card"></div>
+    </div>
+
+    <!-- Update Student -->
+    <div>
+      <h2>Update Student Details</h2>
+      <form id="updateStudentForm" onsubmit="updateStudent(event)">
+        <div class="form-group">
+          <input type="number" id="updateId" placeholder="Student ID" required>
+          <input type="text" id="updateName" placeholder="New Name">
+          <input type="number" id="updateAge" placeholder="New Age">
+          <input type="text" id="updateCourse" placeholder="New Course">
+        </div>
+        <button type="submit">Update Student</button>
+      </form>
+    </div>
+
+    <!-- Delete Student -->
+    <div>
+      <h2>Delete Student</h2>
+      <input type="number" id="deleteId" placeholder="Enter Student ID">
+      <button onclick="deleteStudent()">Delete Student</button>
+    </div>
+  </div>
+
+  <script>
+    const apiUrl = "http://127.0.0.1:5000/students";
+
+    // Get all students
+    async function getAllStudents() {
+      try {
+        const response = await fetch(apiUrl);
+        const students = await response.json();
+        const tableBody = document.querySelector("#studentsTable tbody");
+        tableBody.innerHTML = ""; // Clear previous content
+        students.forEach(student => {
+          const row = `
+            <tr>
+              <td>${student.id}</td>
+              <td>${student.name}</td>
+              <td>${student.age}</td>
+              <td>${student.course}</td>
+              <td class="action-buttons">
+                <button onclick="deleteStudent(${student.id})">Delete</button>
+              </td>
+            </tr>
+          `;
+          tableBody.innerHTML += row;
+        });
+      } catch (error) {
+        console.error("Error fetching students:", error);
+        alert("Could not fetch students. Make sure the server is running.");
+      }
+    }
+
+    // Add a new student
+    async function addStudent(event) {
+      event.preventDefault();
+      const name = document.getElementById("name").value;
+      const age = document.getElementById("age").value;
+      const course = document.getElementById("course").value;
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, age, course }),
+        });
+
+        if (response.ok) {
+          alert("Student added successfully!");
+          getAllStudents(); // Refresh the student list
+        } else {
+          const errorData = await response.json();
+          alert(errorData.error || "Error adding student.");
+        }
+      } catch (error) {
+        console.error("Error adding student:", error);
+        alert("Failed to add student. Please try again.");
+      }
+    }
+
+    // Get a specific student by ID
+    async function getSpecificStudent() {
+      const id = document.getElementById("studentId").value;
+      const response = await fetch(`${apiUrl}/${id}`);
+      const student = await response.json();
+      const studentDiv = document.getElementById("specificStudent");
+
+      if (student.id) {
+        studentDiv.innerHTML = `
+          <p><strong>ID:</strong> ${student.id}</p>
+          <p><strong>Name:</strong> ${student.name}</p>
+          <p><strong>Age:</strong> ${student.age}</p>
+          <p><strong>Course:</strong> ${student.course}</p>
+        `;
+      } else {
+        studentDiv.innerHTML = "<p>Student not found</p>";
+      }
+    }
+
+    // Update student details
+    async function updateStudent(event) {
+      event.preventDefault();
+      const id = document.getElementById("updateId").value;
+      const name = document.getElementById("updateName").value;
+      const age = document.getElementById("updateAge").value;
+      const course = document.getElementById("updateCourse").value;
+
+      try {
+        const response = await fetch(`${apiUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, age, course }),
+        });
+
+        if (response.ok) {
+          alert("Student updated successfully!");
+          getAllStudents(); // Refresh the student list
+        } else {
+          const errorData = await response.json();
+          alert(errorData.error || "Error updating student.");
+        }
+      } catch (error) {
+        console.error("Error updating student:", error);
+        alert("Failed to update student. Please try again.");
+      }
+    }
+
+    // Delete a student
+    async function deleteStudent(id) {
+      const studentId = id || document.getElementById("deleteId").value;
+
+      if (!studentId) {
+        alert("Please provide a valid student ID.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiUrl}/${studentId}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          alert("Student deleted successfully!");
+          getAllStudents(); // Refresh the student list
+        } else {
+          const errorData = await response.json();
+          alert(errorData.error || "Error deleting student.");
+        }
+      } catch (error) {
+        console.error("Error deleting student:", error);
+        alert("Failed to delete student. Please try again.");
+      }
+    }
+  </script>
+</body>
+</html>
